@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gerenciamento de Contratos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        
+        .navbar {
+            background-color: var(--dark-color);
+            padding: 0.5rem;
+            display: flex;
+            overflow-x: auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin: 0 0.2rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        
+        .navbar a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .section h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-color);
+        }
+        
+        .status {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .status h3 {
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark-color);
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        
+        .button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background-color: #2980b9;
+        }
+        
+        .button.delete {
+            background-color: var(--accent-color);
+        }
+        
+        .button.delete:hover {
+            background-color: #c0392b;
+        }
+        
+        .button.success {
+            background-color: var(--success-color);
+        }
+        
+        .button.success:hover {
+            background-color: #27ae60;
+        }
+        
+        .summary {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .summary p {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin: 5px 0;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: var(--light-color);
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .edit-btn {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .delete-btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .export-section {
+            background-color: #e8f4fc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                flex-wrap: wrap;
+            }
+            
+            .navbar a {
+                margin-bottom: 5px;
+            }
+            
+            .form-group input, .form-group select, .form-group textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            .export-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Sistema de Gerenciamento de Contratos</h1>
+        </div>
+    </header>
+    
+    <div class="navbar">
+        <div class="container">
+            <a href="#detalhes">Detalhes do Contrato</a>
+            <a href="#servicos">Serviços e Preços</a>
+            <a href="#cidades">Cidades</a>
+            <a href="#quantidades">Quantidades</a>
+            <a href="#contrato-sap">Contrato SAP</a>
+            <a href="#material-servico">Material/Serviço</a>
+            <a href="#pep">PEP</a>
+            <a href="#centro-sap">Centro SAP</a>
+            <a href="#municipio-nf">Município Geração NF</a>
+            <a href="#cnpj">CNPJ</a>
+            <a href="#calculos">Cálculos e Exportação</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="section" id="detalhes">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Preencha os dados do contrato e cliente para continuar.</p>
+            </div>
+            <h2>Detalhes do Contratado</h2>
+            <p>Preencha as informações básicas do contratado e do contrato.</p>
+            
+            <div class="form-group">
+                <label>Nome do Contratado:</label>
+                <input type="text" id="nome-contratado" placeholder="Digite o nome do contratado">
+            </div>
+            
+            <div class="form-group">
+                <label>CNPJ/CPF:</label>
+                <input type="text" id="cnpj-contratado" placeholder="Digite o CNPJ ou CPF">
+            </div>
+            
+            <div class="form-group">
+                <label>Endereço:</label>
+                <input type="text" id="endereco-contratado" placeholder="Digite o endereço">
+            </div>
+            
+            <div class="form-group">
+                <label>Município:</label>
+                <input type="text" id="municipio-contratado" placeholder="Digite o município">
+            </div>
+            
+            <div class="form-group">
+                <label>Contato:</label>
+                <input type="text" id="contato-contratado" placeholder="Digite o contato">
+            </div>
+            
+            <div class="form-group">
+                <label>Telefone:</label>
+                <input type="text" id="telefone-contratado" placeholder="Digite o telefone">
+            </div>
+            
+            <div class="form-group">
+                <label>E-mail:</label>
+                <input type="email" id="email-contratado" placeholder="Digite o e-mail">
+            </div>
+            
+            <div class="form-group">
+                <label>N.º CONTRATO FÍSICO:</label>
+                <input type="text" id="contrato-fisico" placeholder="Digite o número do contrato físico">
+            </div>
+            
+            <div class="form-group">
+                <label>N.º CONTRATO SAP:</label>
+                <input type="text" id="contrato-sap-global" placeholder="Digite o número do contrato SAP">
+            </div>
+            
+            <div class="form-group">
+                <label>CÓD. FORNECEDOR:</label>
+                <input type="text" id="cod-fornecedor" placeholder="Digite o código do fornecedor">
+            </div>
+            
+            <div class="form-group">
+                <label>VALOR CONTRATO:</label>
+                <input type="text" id="valor-contrato" placeholder="Digite o valor do contrato">
+            </div>
+            
+            <div class="form-group">
+                <label>VALOR ADITIVO:</label>
+                <input type="text" id="valor-aditivo" placeholder="Digite o valor aditivo">
+            </div>
+            
+            <div class="form-group">
+                <label>PRAZO CONTRATO:</label>
+                <input type="text" id="prazo-contrato" placeholder="Digite o prazo do contrato">
+            </div>
+            
+            <div class="form-group">
+                <label>EXEC. INÍCIO:</label>
+                <input type="date" id="exec-inicio">
+            </div>
+            
+            <div class="form-group">
+                <label>EXEC. TÉRMINO:</label>
+                <input type="date" id="exec-termino">
+            </div>
+            
+            <div class="form-group">
+                <label>VIGÊNCIA:</label>
+                <input type="text" id="vigencia" placeholder="Digite a vigência">
+            </div>
+            
+            <div class="form-group">
+                <label>VIG. TÉRMINO:</label>
+                <input type="date" id="vig-termino">
+            </div>
+            
+            <div class="form-group">
+                <label>VLR UTILIZADO:</label>
+                <input type="text" id="vlr-utilizado" placeholder="Digite o valor utilizado">
+            </div>
+            
+            <div class="summary">
+                <p id="total-contratos">R$ 0,00 - Valor Total do Contrato</p>
+                <p id="saldo-disponivel">R$ 0,00 - Saldo Disponível</p>
+            </div>
+
+            <h2>Detalhes do Cliente</h2>
+            
+            <div class="form-group">
+                <label>Nome do Cliente:</label>
+                <input type="text" id="nome-cliente" placeholder="Digite o nome do cliente">
+            </div>
+            
+            <div class="form-group">
+                <label>CNPJ/CPF do Cliente:</label>
+                <input type="text" id="cnpj-cliente" placeholder="Digite o CNPJ ou CPF do cliente">
+            </div>
+            
+            <div class="form-group">
+                <label>Endereço do Cliente:</label>
+                <input type="text" id="endereco-cliente" placeholder="Digite o endereço do cliente">
+            </div>
+            
+            <div class="form-group">
+                <label>Município do Cliente:</label>
+                <input type="text" id="municipio-cliente" placeholder="Digite o município do cliente">
+            </div>
+            
+            <div class="form-group">
+                <label>Contato do Cliente:</label>
+                <input type="text" id="contato-cliente" placeholder="Digite o contato do cliente">
+            </div>
+            
+            <div class="form-group">
+                <label>Telefone do Cliente:</label>
+                <input type="text" id="telefone-cliente" placeholder="Digite o telefone do cliente">
+            </div>
+            
+            <div class="form-group">
+                <label>E-mail do Cliente:</label>
+                <input type="email" id="email-cliente" placeholder="Digite o e-mail do cliente">
+            </div>
+            
+            <div class="form-group">
+                <label>OBJ. CONTRATO:</label>
+                <input type="text" id="obj-contrato" placeholder="Digite o objeto do contrato">
+            </div>
+            
+            <button class="button success" id="salvar-dados">Salvar Dados do Contrato</button>
+        </div>
+
+        <div class="section" id="servicos">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Configure os serviços e preços unitários.</p>
+            </div>
+            <h2>Serviços e Preços Unitários</h2>
+            <p>Configure os serviços disponíveis e seus respectivos preços OPEX e CAPEX para regiões metropolitana e interior.</p>
+            
+            <div class="form-group">
+                <label>Serviços Disponíveis (separados por vírgula):</label>
+                <textarea id="servicos-disponiveis" rows="4">Fiscalização com instalação de nova ligação,Fiscalização com religação de abastecimento,Fiscalização com remanejamento de cavalete,Fiscalização com subst./instal. HD,Fiscalização sem acesso ao cavalete,Fiscalização sem irregularidade,Fisclização com fraude - retirada bypass/lig clandestina,Fisclização com fraude - supressão ligação,Fisclização com fraude - suspensão ramal,Sondagem,Recomposição Pavimento</textarea>
+            </div>
+            
+            <h3>Região Metropolitana</h3>
+            
+            <div class="form-group">
+                <label>Preços OPEX (separados por vírgula):</label>
+                <input type="text" id="opex-metro" value="28.3,161.89,28.3,26.9,28.33,185.15,180.42,168.08,99.43,124.01,71.25">
+            </div>
+            
+            <div class="form-group">
+                <label>Preços CAPEX (separados por vírgula):</label>
+                <input type="text" id="capex-metro" value="285.22,161.89,225.94,17.91,26.9,28.33,185.15,180.42,168.08,99.43,124.01">
+            </div>
+            
+            <h3>Região Interior</h3>
+            
+            <div class="form-group">
+                <label>Preços OPEX (separados por vírgula):</label>
+                <input type="text" id="opex-interior" value="28.3,161.89,28.3,26.9,28.33,185.15,180.42,168.08,99.43,124.01,71.25">
+            </div>
+            
+            <div class="form-group">
+                <label>Preços CAPEX (separados por vírgula):</label>
+                <input type="text" id="capex-interior" value="285.22,161.89,225.94,17.91,26.9,28.33,185.15,180.42,168.08,99.43,124.01">
+            </div>
+            
+            <button class="button success" id="salvar-precos">Salvar Preços</button>
+        </div>
+
+        <div class="section" id="cidades">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Cadastre as cidades onde os serviços serão executados.</p>
+            </div>
+            <h2>Cadastro de Cidades</h2>
+            <p>Cadastre as cidades onde os serviços serão executados, especificando se são da região metropolitana ou interior.</p>
+            
+            <h3>Adicionar Nova Cidade</h3>
+            
+            <div class="form-group">
+                <label>Nome da Cidade:</label>
+                <input type="text" id="nome-cidade" placeholder="Digite o nome da cidade">
+            </div>
+            
+            <div class="form-group">
+                <label>Regional:</label>
+                <select id="regional-cidade">
+                    <option>Selecione...</option>
+                    <option>Metropolitana</option>
+                    <option>Interior</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Centro:</label>
+                <input type="text" id="centro-cidade" placeholder="Digite o centro">
+            </div>
+            
+            <button class="button" id="add-cidade">Adicionar Cidade</button>
+            
+            <h3>Importação em Lote</h3>
+            
+            <div class="form-group">
+                <label>Importar Cidades (formato: Nome, Regional, Centro - uma por linha):</label>
+                <textarea id="import-cidades" rows="4" placeholder="Exemplo: São Paulo, Metropolitana, Centro 1"></textarea>
+            </div>
+            
+            <button class="button" id="import-btn">Importar Cidades</button>
+            
+            <h3>Cidades Cadastradas</h3>
+            <table id="cidades-table">
+                <thead>
+                    <tr><th>Nome</th><th>Regional</th><th>Centro</th><th>Ações</th></tr>
+                </thead>
+                <tbody>
+                    <!-- As cidades serão adicionadas aqui via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="quantidades">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Defina as quantidades de cada serviço por cidade.</p>
+            </div>
+            <h2>Quantidades por Cidade</h2>
+            <p>Defina as quantidades de each serviço que será executado em cada cidade.</p>
+            <div id="quantidades-form">
+                <p>Cadastre cidades primeiro para definir quantidades.</p>
+            </div>
+        </div>
+
+        <div class="section" id="contrato-sap">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Insira o contrato SAP para cada cidade.</p>
+            </div>
+            <h2>Contrato SAP</h2>
+            <p>Insira o contrato SAP correspondente para cada cidade cadastrada.</p>
+            <div id="contrato-sap-form">
+                <p>Cadastre cidades primeiro para configurar contratos SAP.</p>
+            </div>
+        </div>
+
+        <div class="section" id="material-servico">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Insira o código de material/serviço para cada cidade.</p>
+            </div>
+            <h2>Material/Serviço</h2>
+            <p>Insira o código de material/serviço correspondente para cada cidade cadastrada.</p>
+            <div id="material-servico-form">
+                <p>Cadastre cidades primeiro para configurar materiais/serviços.</p>
+            </div>
+        </div>
+
+        <div class="section" id="pep">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Insira o código PEP para cada cidade.</p>
+            </div>
+            <h2>PEP (Project Element Planning)</h2>
+            <p>Insira o código PEP correspondente para cada cidade cadastrada.</p>
+            <div id="pep-form">
+                <p>Cadastre cidades primeiro para configurar PEPs.</p>
+            </div>
+        </div>
+
+        <div class="section" id="centro-sap">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Insira o centro SAP para cada cidade.</p>
+            </div>
+            <h2>Centro SAP</h2>
+            <p>Insira o centro SAP correspondente para cada cidade cadastrada.</p>
+            <div id="centro-sap-form">
+                <p>Cadastre cidades primeiro para configurar centros SAP.</p>
+            </div>
+        </div>
+
+        <div class="section" id="municipio-nf">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Insira o município de geração de NF para cada cidade.</p>
+            </div>
+            <h2>Município Geração NF</h2>
+            <p>Insira o município de geração de nota fiscal correspondente para cada cidade cadastrada.</p>
+            <div id="municipio-nf-form">
+                <p>Cadastre cidades primeiro para configurar municípios de geração de NF.</p>
+            </div>
+        </div>
+
+        <div class="section" id="cnpj">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Insira o CNPJ para cada cidade.</p>
+            </div>
+            <h2>CNPJ</h2>
+            <p>Insira o CNPJ correspondente para cada cidade cadastrada.</p>
+            <div id="cnpj-form">
+                <p>Cadastre cidades primeiro para configurar CNPJs.</p>
+            </div>
+        </div>
+
+        <div class="section" id="calculos">
+            <div class="status">
+                <h3>Status da Etapa</h3>
+                <p>Visualize os cálculos finais e exporte os dados.</p>
+            </div>
+            <h2>Cálculos e Exportação</h2>
+            <p>Visualize os cálculos finais baseados nas quantidades and preços configurados, e exporte os dados no formato da planilha.</p>
+            
+            <button class="button success" id="calcular-btn">Calcular Todos os Valores</button>
+            
+            <div id="resultados">
+                <p>Clique em "Calcular Todos os Valores" para visualizar os resultados.</p>
+            </div>
+            
+            <div class="export-section">
+                <h3>Exportação de Dados</h3>
+                <p>Exporte todos os dados do sistema para Excel ou JSON:</p>
+                
+                <div class="export-buttons">
+                    <button class="button success" id="export-excel">Exportar para Excel</button>
+                    <button class="button" id="export-json">Exportar para JSON</button>
+                </div>
+                
+                <div id="export-status" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let data = {
+            cities: [],
+            quantidades: {},
+            contratoSap: {},
+            materialServico: {},
+            pep: {},
+            centroSap: {},
+            municipioNf: {},
+            cnpj: {},
+            servicos: "Fiscalização com instalação de nova ligação,Fiscalização com religação de abastecimento,Fiscalização com remanejamento de cavalete,Fiscalização com subst./instal. HD,Fiscalização sem acesso ao cavalete,Fiscalização sem irregularidade,Fisclização com fraude - retirada bypass/lig clandestina,Fisclização com fraude - supressão ligação,Fisclização com fraude - suspensão ramal,Sondagem,Recomposição Pavimento",
+            opexMetro: "28.3,161.89,28.3,26.9,28.33,185.15,180.42,168.08,99.43,124.01,71.25",
+            capexMetro: "285.22,161.89,225.94,17.91,26.9,28.33,185.15,180.42,168.08,99.43,124.01",
+            opexInterior: "28.3,161.89,28.3,26.9,28.33,185.15,180.42,168.08,99.43,124.01,71.25",
+            capexInterior: "285.22,161.89,225.94,17.91,26.9,28.33,185.15,180.42,168.08,99.43,124.01",
+            nomeContratado: '',
+            cnpjContratado: '',
+            enderecoContratado: '',
+            municipioContratado: '',
+            contatoContratado: '',
+            telefoneContratado: '',
+            emailContratado: '',
+            contratoFisico: '',
+            contratoSapGlobal: '',
+            codFornecedor: '',
+            valorContrato: '',
+            valorAditivo: '',
+            prazoContrato: '',
+            execInicio: '',
+            execTermino: '',
+            vigencia: '',
+            vigTermino: '',
+            vlrUtilizado: '',
+            nomeCliente: '',
+            cnpjCliente: '',
+            enderecoCliente: '',
+            municipioCliente: '',
+            contatoCliente: '',
+            telefoneCliente: '',
+            emailCliente: '',
+            objContrato: ''
+        };
+
+        let services = data.servicos.split(',');
+        let editIndex = -1;
+
+        // Funções utilitárias
+        function parseCurrency(str) {
+            return parseFloat((str || '0').replace(/[R$\. ]/g, '').replace(',', '.') || 0);
+        }
+
+        function formatCurrency(num) {
+            return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function updateBalance() {
+            const valorContrato = parseCurrency(data.valorContrato);
+            const valorAditivo = parseCurrency(data.valorAditivo);
+            const vlrUtilizado = parseCurrency(data.vlrUtilizado);
+            const total = valorContrato + valorAditivo;
+            const saldo = total - vlrUtilizado;
+            
+            document.getElementById('total-contratos').innerText = `${formatCurrency(total)} - Valor Total do Contrato`;
+            document.getElementById('saldo-disponivel').innerText = `${formatCurrency(saldo)} - Saldo Disponível`;
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('contratoData', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('contratoData');
+            if (savedData) {
+                data = JSON.parse(savedData);
+                services = data.servicos.split(',');
+                
+                // Preencher formulários com dados salvos
+                document.getElementById('servicos-disponiveis').value = data.servicos;
+                document.getElementById('opex-metro').value = data.opexMetro;
+                document.getElementById('capex-metro').value = data.capexMetro;
+                document.getElementById('opex-interior').value = data.opexInterior;
+                document.getElementById('capex-interior').value = data.capexInterior;
+                
+                document.getElementById('nome-contratado').value = data.nomeContratado;
+                document.getElementById('cnpj-contratado').value = data.cnpjContratado;
+                document.getElementById('endereco-contratado').value = data.enderecoContratado;
+                document.getElementById('municipio-contratado').value = data.municipioContratado;
+                document.getElementById('contato-contratado').value = data.contatoContratado;
+                document.getElementById('telefone-contratado').value = data.telefoneContratado;
+                document.getElementById('email-contratado').value = data.emailContratado;
+                document.getElementById('contrato-fisico').value = data.contratoFisico;
+                document.getElementById('contrato-sap-global').value = data.contratoSapGlobal;
+                document.getElementById('cod-fornecedor').value = data.codFornecedor;
+                document.getElementById('valor-contrato').value = data.valorContrato;
+                document.getElementById('valor-aditivo').value = data.valorAditivo;
+                document.getElementById('prazo-contrato').value = data.prazoContrato;
+                document.getElementById('exec-inicio').value = data.execInicio;
+                document.getElementById('exec-termino').value = data.execTermino;
+                document.getElementById('vigencia').value = data.vigencia;
+                document.getElementById('vig-termino').value = data.vigTermino;
+                document.getElementById('vlr-utilizado').value = data.vlrUtilizado;
+                
+                document.getElementById('nome-cliente').value = data.nomeCliente;
+                document.getElementById('cnpj-cliente').value = data.cnpjCliente;
+                document.getElementById('endereco-cliente').value = data.enderecoCliente;
+                document.getElementById('municipio-cliente').value = data.municipioCliente;
+                document.getElementById('contato-cliente').value = data.contatoCliente;
+                document.getElementById('telefone-cliente').value = data.telefoneCliente;
+                document.getElementById('email-cliente').value = data.emailCliente;
+                document.getElementById('obj-contrato').value = data.objContrato;
+                
+                updateBalance();
+                renderCities();
+            }
+        }
+
+        function saveDetalhes() {
+            data.nomeContratado = document.getElementById('nome-contratado').value;
+            data.cnpjContratado = document.getElementById('cnpj-contratado').value;
+            data.enderecoContratado = document.getElementById('endereco-contratado').value;
+            data.municipioContratado = document.getElementById('municipio-contratado').value;
+            data.contatoContratado = document.getElementById('contato-contratado').value;
+            data.telefoneContratado = document.getElementById('telefone-contratado').value;
+            data.emailContratado = document.getElementById('email-contratado').value;
+            data.contratoFisico = document.getElementById('contrato-fisico').value;
+            data.contratoSapGlobal = document.getElementById('contrato-sap-global').value;
+            data.codFornecedor = document.getElementById('cod-fornecedor').value;
+            data.valorContrato = document.getElementById('valor-contrato').value;
+            data.valorAditivo = document.getElementById('valor-aditivo').value;
+            data.prazoContrato = document.getElementById('prazo-contrato').value;
+            data.execInicio = document.getElementById('exec-inicio').value;
+            data.execTermino = document.getElementById('exec-termino').value;
+            data.vigencia = document.getElementById('vigencia').value;
+            data.vigTermino = document.getElementById('vig-termino').value;
+            data.vlrUtilizado = document.getElementById('vlr-utilizado').value;
+            
+            data.nomeCliente = document.getElementById('nome-cliente').value;
+            data.cnpjCliente = document.getElementById('cnpj-cliente').value;
+            data.enderecoCliente = document.getElementById('endereco-cliente').value;
+            data.municipioCliente = document.getElementById('municipio-cliente').value;
+            data.contatoCliente = document.getElementById('contato-cliente').value;
+            data.telefoneCliente = document.getElementById('telefone-cliente').value;
+            data.emailCliente = document.getElementById('email-cliente').value;
+            data.objContrato = document.getElementById('obj-contrato').value;
+            
+            saveToLocalStorage();
+            updateBalance();
+        }
+
+        function savePrecos() {
+            data.servicos = document.getElementById('servicos-disponiveis').value;
+            services = data.servicos.split(',');
+            data.opexMetro = document.getElementById('opex-metro').value;
+            data.capexMetro = document.getElementById('capex-metro').value;
+            data.opexInterior = document.getElementById('opex-interior').value;
+            data.capexInterior = document.getElementById('capex-interior').value;
+            
+            saveToLocalStorage();
+            renderQuantidades();
+        }
+
+        function renderCities() {
+            const table = document.getElementById('cidades-table');
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            data.cities.forEach((city, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${city.nome}</td>
+                    <td>${city.regional}</td>
+                    <td>${city.centro}</td>
+                    <td>
+                        <button class="action-btn edit-btn" data-index="${i}">Editar</button>
+                        <button class="action-btn delete-btn" data-index="${i}">Remover</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', editCity));
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', deleteCity));
+            
+            renderQuantidades();
+            renderForm('contrato-sap-form', 'contratoSap', 'Contrato SAP');
+            renderForm('material-servico-form', 'materialServico', 'Material/Serviço');
+            renderForm('pep-form', 'pep', 'PEP');
+            renderForm('centro-sap-form', 'centroSap', 'Centro SAP');
+            renderForm('municipio-nf-form', 'municipioNf', 'Município Geração NF');
+            renderForm('cnpj-form', 'cnpj', 'CNPJ');
+        }
+
+        function editCity(e) {
+            const index = parseInt(e.target.dataset.index);
+            const city = data.cities[index];
+            
+            document.getElementById('nome-cidade').value = city.nome;
+            document.getElementById('regional-cidade').value = city.regional;
+            document.getElementById('centro-cidade').value = city.centro;
+            
+            editIndex = index;
+            document.getElementById('add-cidade').innerText = 'Salvar Alterações';
+        }
+
+        function deleteCity(e) {
+            const index = parseInt(e.target.dataset.index);
+            const cityName = data.cities[index].nome;
+            
+            if (confirm(`Tem certeza que deseja remover a cidade ${cityName}?`)) {
+                data.cities.splice(index, 1);
+                
+                delete data.quantidades[cityName];
+                delete data.contratoSap[cityName];
+                delete data.materialServico[cityName];
+                delete data.pep[cityName];
+                delete data.centroSap[cityName];
+                delete data.municipioNf[cityName];
+                delete data.cnpj[cityName];
+                
+                saveToLocalStorage();
+                renderCities();
+                
+                alert('Cidade removida com sucesso!');
+            }
+        }
+
+        function renderQuantidades() {
+            const form = document.getElementById('quantidades-form');
+            
+            if (data.cities.length === 0) {
+                form.innerHTML = '<p>Cadastre cidades primeiro para definir quantidades.</p>';
+                return;
+            }
+            
+            let html = '<table><tr><th>Cidade</th>';
+            
+            services.forEach(s => {
+                html += `<th title="${s}">${s.substring(0, 15)}${s.length > 15 ? '...' : ''}</th>`;
+            });
+            
+            html += '</tr>';
+            
+            data.cities.forEach(city => {
+                html += `<tr><td>${city.nome}</td>`;
+                
+                for (let i = 0; i < services.length; i++) {
+                    const val = (data.quantidades[city.nome] && data.quantidades[city.nome][i]) || '';
+                    html += `<td><input type="number" min="0" class="quant-input" data-city="${city.nome}" data-index="${i}" value="${val}"></td>`;
+                }
+                
+                html += '</tr>';
+            });
+            
+            html += '</table>';
+            form.innerHTML = html;
+            
+            form.querySelectorAll('.quant-input').forEach(inp => {
+                inp.addEventListener('input', e => {
+                    const city = e.target.dataset.city;
+                    const index = parseInt(e.target.dataset.index);
+                    
+                    if (!data.quantidades[city]) {
+                        data.quantidades[city] = Array(services.length).fill('');
+                    }
+                    
+                    data.quantidades[city][index] = e.target.value;
+                    saveToLocalStorage();
+                });
+            });
+        }
+
+        function renderForm(formId, dataKey, label) {
+            const form = document.getElementById(formId);
+            
+            if (data.cities.length === 0) {
+                form.innerHTML = `<p>Cadastre cidades primeiro para configurar ${label.toLowerCase()}.</p>`;
+                return;
+            }
+            
+            let html = '';
+            
+            data.cities.forEach(city => {
+                const val = data[dataKey][city.nome] || '';
+                html += `
+                    <div class="form-group">
+                        <label>${city.nome} ${label}:</label>
+                        <input type="text" class="form-input" data-city="${city.nome}" data-key="${dataKey}" value="${val}">
+                    </div>
+                `;
+            });
+            
+            html += `<button class="button success" id="salvar-${dataKey}">Salvar ${label}</button>`;
+            form.innerHTML = html;
+            
+            form.querySelectorAll('.form-input').forEach(inp => {
+                inp.addEventListener('input', e => {
+                    const city = e.target.dataset.city;
+                    const key = e.target.dataset.key;
+                    data[key][city] = e.target.value;
+                    saveToLocalStorage();
+                });
+            });
+            
+            document.getElementById(`salvar-${dataKey}`).addEventListener('click', () => {
+                saveToLocalStorage();
+                alert(`${label} salvo com sucesso!`);
+            });
+        }
+
+        // Função para sanitizar nomes de abas do Excel
+        function sanitizeSheetName(name) {
+            // Remove caracteres inválidos para nomes de abas no Excel
+            return name.replace(/[:\\\/?*[\]]/g, '');
+        }
+
+        // Event Listeners
+        document.getElementById('salvar-dados').addEventListener('click', () => {
+            saveDetalhes();
+            alert('Dados do contrato salvos com sucesso!');
+        });
+
+        document.getElementById('salvar-precos').addEventListener('click', () => {
+            savePrecos();
+            alert('Preços salvos com sucesso!');
+        });
+
+        document.getElementById('add-cidade').addEventListener('click', () => {
+            const nome = document.getElementById('nome-cidade').value.trim();
+            const regional = document.getElementById('regional-cidade').value;
+            const centro = document.getElementById('centro-cidade').value.trim();
+            
+            if (nome && regional !== 'Selecione...' && centro) {
+                if (editIndex === -1) {
+                    data.cities.push({ nome, regional, centro });
+                } else {
+                    const oldName = data.cities[editIndex].nome;
+                    data.cities[editIndex] = { nome, regional, centro };
+                    
+                    if (oldName !== nome) {
+                        data.quantidades[nome] = data.quantidades[oldName] || [];
+                        delete data.quantidades[oldName];
+                        
+                        data.contratoSap[nome] = data.contratoSap[oldName] || '';
+                        delete data.contratoSap[oldName];
+                        
+                        data.materialServico[nome] = data.materialServico[oldName] || '';
+                        delete data.materialServico[oldName];
+                        
+                        data.pep[nome] = data.pep[oldName] || '';
+                        delete data.pep[oldName];
+                        
+                        data.centroSap[nome] = data.centroSap[oldName] || '';
+                        delete data.centroSap[oldName];
+                        
+                        data.municipioNf[nome] = data.municipioNf[oldName] || '';
+                        delete data.municipioNf[oldName];
+                        
+                        data.cnpj[nome] = data.cnpj[oldName] || '';
+                        delete data.cnpj[oldName];
+                    }
+                    
+                    editIndex = -1;
+                    document.getElementById('add-cidade').innerText = 'Adicionar Cidade';
+                }
+                
+                saveToLocalStorage();
+                renderCities();
+                
+                document.getElementById('nome-cidade').value = '';
+                document.getElementById('regional-cidade').value = 'Selecione...';
+                document.getElementById('centro-cidade').value = '';
+                
+                alert('Cidade adicionada/editada com sucesso!');
+            } else {
+                alert('Preencha todos os campos obrigatórios.');
+            }
+        });
+
+        document.getElementById('import-btn').addEventListener('click', () => {
+            const lines = document.getElementById('import-cidades').value.split('\n');
+            let imported = 0;
+            
+            lines.forEach(line => {
+                const parts = line.split(',').map(p => p.trim());
+                if (parts.length === 3 && parts[0] && ['Metropolitana', 'Interior'].includes(parts[1]) && parts[2]) {
+                    data.cities.push({ nome: parts[0], regional: parts[1], centro: parts[2] });
+                    imported++;
+                }
+            });
+            
+            if (imported > 0) {
+                saveToLocalStorage();
+                renderCities();
+                document.getElementById('import-cidades').value = '';
+                alert(`${imported} cidades importadas com sucesso!`);
+            } else {
+                alert('Nenhuma cidade válida encontrada para importação. Verifique o formato.');
+            }
+        });
+
+        document.getElementById('calcular-btn').addEventListener('click', () => {
+            let totalOpex = 0;
+            let totalCapex = 0;
+            
+            data.cities.forEach(city => {
+                const regional = city.regional.toLowerCase();
+                const opexPrices = (regional === 'metropolitana' ? data.opexMetro : data.opexInterior || data.opexMetro).split(',').map(parseFloat);
+                const capexPrices = (regional === 'metropolitana' ? data.capexMetro : data.capexInterior || data.capexMetro).split(',').map(parseFloat);
+                
+                const quants = data.quantidades[city.nome] || Array(services.length).fill(0);
+                
+                quants.forEach((q, i) => {
+                    totalOpex += parseFloat(q || 0) * (opexPrices[i] || 0);
+                    totalCapex += parseFloat(q || 0) * (capexPrices[i] || 0);
+                });
+            });
+            
+            document.getElementById('resultados').innerHTML = `
+                <div class="summary">
+                    <p>Total OPEX: ${formatCurrency(totalOpex)}</p>
+                    <p>Total CAPEX: ${formatCurrency(totalCapex)}</p>
+                    <p>Total Geral: ${formatCurrency(totalOpex + totalCapex)}</p>
+                </div>
+            `;
+        });
+
+        document.getElementById('export-json').addEventListener('click', () => {
+            const a = document.createElement('a');
+            a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data));
+            a.download = 'contratoData.json';
+            a.click();
+            
+            document.getElementById('export-status').innerHTML = `
+                <div class="alert success">
+                    Arquivo JSON exportado com sucesso!
+                </div>
+            `;
+            
+            setTimeout(() => {
+                document.getElementById('export-status').innerHTML = '';
+            }, 3000);
+        });
+
+        document.getElementById('export-excel').addEventListener('click', () => {
+            try {
+                const wb = XLSX.utils.book_new();
+
+                // Detalhes do Contrato
+                const detalhesData = [
+                    ['DETALHES DO CONTRATADO'],
+                    ['Nome do Contratado', data.nomeContratado],
+                    ['CNPJ/CPF', data.cnpjContratado],
+                    ['Endereço', data.enderecoContratado],
+                    ['Município', data.municipioContratado],
+                    ['Contato', data.contatoContratado],
+                    ['Telefone', data.telefoneContratado],
+                    ['E-mail', data.emailContratado],
+                    ['N.º CONTRATO FÍSICO', data.contratoFisico],
+                    ['N.º CONTRATO SAP', data.contratoSapGlobal],
+                    ['CÓD. FORNECEDOR', data.codFornecedor],
+                    ['VALOR CONTRATO', formatCurrency(parseCurrency(data.valorContrato))],
+                    ['VALOR ADITivo', formatCurrency(parseCurrency(data.valorAditivo))],
+                    ['PRAZO CONTRATO', data.prazoContrato],
+                    ['EXEC. INÍCIO', data.execInicio],
+                    ['EXEC. TÉRMINO', data.execTermino],
+                    ['VIGÊNCIA', data.vigencia],
+                    ['VIG. TÉRMINO', data.vigTermino],
+                    ['VLR UTILIZADO', formatCurrency(parseCurrency(data.vlrUtilizado))],
+                    [],
+                    ['DETALHES DO CLIENTE'],
+                    ['Nome do Cliente', data.nomeCliente],
+                    ['CNPJ/CPF do Cliente', data.cnpjCliente],
+                    ['Endereço do Cliente', data.enderecoCliente],
+                    ['Município do Cliente', data.municipioCliente],
+                    ['Contato do Cliente', data.contatoCliente],
+                    ['Telefone do Cliente', data.telefoneCliente],
+                    ['E-mail do Cliente', data.emailCliente],
+                    ['OBJ. CONTRATO', data.objContrato]
+                ];
+                const detalhesWs = XLSX.utils.aoa_to_sheet(detalhesData);
+                XLSX.utils.book_append_sheet(wb, detalhesWs, sanitizeSheetName("Detalhes do Contrato"));
+
+                // Serviços e Preços
+                const servicesList = data.servicos.split(',');
+                const opexMetroList = data.opexMetro.split(',');
+                const capexMetroList = data.capexMetro.split(',');
+                const opexInteriorList = data.opexInterior.split(',');
+                const capexInteriorList = data.capexInterior.split(',');
+                
+                const servicesData = [
+                    ['Serviços e Preços Unitários'],
+                    ['Índice', 'Serviço', 'OPEX Metropolitana', 'CAPEX Metropolitana', 'OPEX Interior', 'CAPEX Interior']
+                ];
+                
+                servicesList.forEach((service, index) => {
+                    servicesData.push([
+                        index + 1,
+                        service,
+                        parseFloat(opexMetroList[index] || 0),
+                        parseFloat(capexMetroList[index] || 0),
+                        parseFloat(opexInteriorList[index] || 0),
+                        parseFloat(capexInteriorList[index] || 0)
+                    ]);
+                });
+                
+                const servicesWs = XLSX.utils.aoa_to_sheet(servicesData);
+                XLSX.utils.book_append_sheet(wb, servicesWs, sanitizeSheetName("Serviços e Preços"));
+
+                // Cidades
+                const cidadesHeader = ['Cidade', 'Regional', 'Centro'];
+                const cidadesData = [cidadesHeader];
+                data.cities.forEach(city => {
+                    cidadesData.push([city.nome, city.regional, city.centro]);
+                });
+                const cidadesWs = XLSX.utils.aoa_to_sheet(cidadesData);
+                XLSX.utils.book_append_sheet(wb, cidadesWs, sanitizeSheetName("Cidades"));
+
+                // Quantidades por Cidade
+                const quantHeader = ['Cidade', ...servicesList];
+                const quantData = [quantHeader];
+                data.cities.forEach(city => {
+                    const quants = data.quantidades[city.nome] || Array(servicesList.length).fill(0);
+                    quantData.push([city.nome, ...quants]);
+                });
+                const quantWs = XLSX.utils.aoa_to_sheet(quantData);
+                XLSX.utils.book_append_sheet(wb, quantWs, sanitizeSheetName("Quantidades"));
+
+                // Informações Adicionais por Cidade
+                const additionalSections = [
+                    { key: 'contratoSap', title: 'Contrato SAP', data: data.contratoSap },
+                    { key: 'materialServico', title: 'Material/Serviço', data: data.materialServico },
+                    { key: 'pep', title: 'PEP', data: data.pep },
+                    { key: 'centroSap', title: 'Centro SAP', data: data.centroSap },
+                    { key: 'municipioNf', title: 'Município Geração NF', data: data.municipioNf },
+                    { key: 'cnpj', title: 'CNPJ', data: data.cnpj }
+                ];
+
+                additionalSections.forEach(section => {
+                    const header = ['Cidade', section.title];
+                    const sectionData = [header];
+                    data.cities.forEach(city => {
+                        sectionData.push([city.nome, section.data[city.nome] || '']);
+                    });
+                    const ws = XLSX.utils.aoa_to_sheet(sectionData);
+                    XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(section.title));
+                });
+
+                // Cálculos Detalhados - RESUMO GERAL
+                const calcHeader = ['Cidade', 'Regional', 'Serviço', 'Quantidade', 'Preço OPEX', 'Valor OPEX', 'Preço CAPEX', 'Valor CAPEX'];
+                const calcData = [calcHeader];
+                
+                let totalGeralOpex = 0;
+                let totalGeralCapex = 0;
+                
+                data.cities.forEach(city => {
+                    const regionalKey = city.regional.toLowerCase();
+                    const opexPrices = (regionalKey === 'metropolitana' ? data.opexMetro : data.opexInterior).split(',').map(parseFloat);
+                    const capexPrices = (regionalKey === 'metropolitana' ? data.capexMetro : data.capexInterior).split(',').map(parseFloat);
+                    
+                    const quants = data.quantidades[city.nome] || Array(servicesList.length).fill(0);
+                    let totalCidadeOpex = 0;
+                    let totalCidadeCapex = 0;
+                    
+                    servicesList.forEach((serv, i) => {
+                        const q = parseFloat(quants[i] || 0);
+                        const pOpex = opexPrices[i] || 0;
+                        const vOpex = q * pOpex;
+                        const pCapex = capexPrices[i] || 0;
+                        const vCapex = q * pCapex;
+                        
+                        calcData.push([
+                            city.nome, 
+                            city.regional, 
+                            serv, 
+                            q, 
+                            pOpex, 
+                            vOpex, 
+                            pCapex, 
+                            vCapex
+                        ]);
+                        
+                        totalCidadeOpex += vOpex;
+                        totalCidadeCapex += vCapex;
+                    });
+                    
+                    // Adicionar linha de total por cidade
+                    calcData.push([
+                        city.nome, 
+                        'TOTAL CIDADE', 
+                        '', 
+                        '', 
+                        '', 
+                        totalCidadeOpex, 
+                        '', 
+                        totalCidadeCapex
+                    ]);
+                    
+                    totalGeralOpex += totalCidadeOpex;
+                    totalGeralCapex += totalCidadeCapex;
+                });
+                
+                // Adicionar linha de total geral
+                calcData.push([
+                    'TOTAL GERAL', 
+                    '', 
+                    '', 
+                    '', 
+                    '', 
+                    totalGeralOpex, 
+                    '', 
+                    totalGeralCapex
+                ]);
+                
+                const calcWs = XLSX.utils.aoa_to_sheet(calcData);
+                XLSX.utils.book_append_sheet(wb, calcWs, sanitizeSheetName("Cálculos Detalhados"));
+
+                // Resumo Executivo
+                const valorContrato = parseCurrency(data.valorContrato);
+                const valorAditivo = parseCurrency(data.valorAditivo);
+                const vlrUtilizado = parseCurrency(data.vlrUtilizado);
+                const totalContrato = valorContrato + valorAditivo;
+                const saldoDisponivel = totalContrato - vlrUtilizado;
+                
+                const resumoData = [
+                    ['RESUMO EXECUTIVO DO CONTRATO'],
+                    ['Valor do Contrato', formatCurrency(valorContrato)],
+                    ['Valor Aditivo', formatCurrency(valorAditivo)],
+                    ['Valor Total do Contrato', formatCurrency(totalContrato)],
+                    ['Valor Utilizado', formatCurrency(vlrUtilizado)],
+                    ['Saldo Disponível', formatCurrency(saldoDisponivel)],
+                    [],
+                    ['TOTAIS DOS SERVIÇOS'],
+                    ['Total OPEX', formatCurrency(totalGeralOpex)],
+                    ['Total CAPEX', formatCurrency(totalGeralCapex)],
+                    ['Total Geral', formatCurrency(totalGeralOpex + totalGeralCapex)],
+                    [],
+                    ['COMPARAÇÃO COM CONTRATO'],
+                    ['Percentual Utilizado', `${((vlrUtilizado / totalContrato) * 100).toFixed(2)}%`],
+                    ['Saldo Restante', formatCurrency(saldoDisponivel)],
+                    ['Percentual Restante', `${((saldoDisponivel / totalContrato) * 100).toFixed(2)}%`]
+                ];
+                
+                const resumoWs = XLSX.utils.aoa_to_sheet(resumoData);
+                XLSX.utils.book_append_sheet(wb, resumoWs, sanitizeSheetName("Resumo Executivo"));
+
+                // Gerar nome do arquivo com data
+                const date = new Date();
+                const fileName = `Relatorio_Contrato_${date.toISOString().split('T')[0]}.xlsx`;
+                
+                XLSX.writeFile(wb, fileName);
+                
+                document.getElementById('export-status').innerHTML = `
+                    <div class="alert success">
+                        Arquivo Excel exportado com sucesso! O download começará em instantes.
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    document.getElementById('export-status').innerHTML = '';
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Erro ao exportar para Excel:', error);
+                document.getElementById('export-status').innerHTML = `
+                    <div class="alert error">
+                        Erro ao exportar para Excel: ${error.message}
+                    </div>
+                `;
+            }
+        });
+
+        // Inicialização
+        window.onload = function() {
+            loadFromLocalStorage();
+            
+            // Adicionar event listeners para campos monetários
+            ['valor-contrato', 'valor-aditivo', 'vlr-utilizado'].forEach(id => {
+                document.getElementById(id).addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    value = (value/100).toFixed(2) + '';
+                    value = value.replace(".", ",");
+                    value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                    e.target.value = value;
+                    updateBalance();
+                });
+            });
+        };
+    </script>
+</body>
+</html>
